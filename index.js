@@ -1,15 +1,10 @@
 require('dotenv').config()
 const TelegramApi = require('node-telegram-bot-api')
 const {gameOptions, againOptions} = require('./options')
+const sequelize = require('./db');
 const token = process.env.TELEGRAM_TOKEN
 
 const bot = new TelegramApi(token, {polling: true})
-
-bot.setMyCommands([
-    {command: '/start', description: 'First greetings'},
-    {command: '/info', description: 'Info about bot'},
-    {command: '/game', description: 'Davai poigraem'},
-])
 
 const chats = {};
 
@@ -23,7 +18,21 @@ const startGame = async (chatId) => {
 }
 
 
-const start = () => {
+const start = async () => {
+
+    try {
+        await sequelize.authenticate()
+        await sequelize.sync()
+    } catch (e) {
+        console.log('DB connection broken')
+    }
+
+    bot.setMyCommands([
+        {command: '/start', description: 'First greetings'},
+        {command: '/info', description: 'Info about bot'},
+        {command: '/game', description: 'Davai poigraem'},
+    ])
+
     bot.on('message', async msg => {
         const text = msg.text;
         const chatId = msg.chat.id;
